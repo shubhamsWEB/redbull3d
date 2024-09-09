@@ -1,6 +1,4 @@
 "use client";
-
-import { Content } from "@prismicio/client";
 import { Cloud, Clouds, Environment, Text } from "@react-three/drei";
 import { useRef } from "react";
 import * as THREE from "three";
@@ -15,7 +13,7 @@ gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 type SkyDiveProps = {
   sentence: string | null;
-  flavor: Content.SkyDiveSliceDefaultPrimary["flavor"];
+  flavor: any;
 };
 
 export default function Scene({ sentence, flavor }: SkyDiveProps) {
@@ -155,6 +153,7 @@ export default function Scene({ sentence, flavor }: SkyDiveProps) {
 
       {/* Text */}
       <group ref={wordsRef}>
+        {/* @ts-ignore */}
         {sentence && <ThreeText sentence={sentence} color="#F97315" />}
       </group>
 

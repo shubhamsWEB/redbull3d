@@ -1,18 +1,14 @@
 "use client";
 
-import { Environment, OrbitControls } from "@react-three/drei";
+import { Environment } from "@react-three/drei";
 import { useRef, useState, useEffect } from "react";
 import { Group } from "three";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import TextEffect from './TextEffect';
-import CustomShaderMaterial from "three-custom-shader-material";
-import * as THREE from "three";
 import FloatingCan from "@/components/FloatingCan";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { useControls } from "leva";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useThree } from "@react-three/fiber";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 

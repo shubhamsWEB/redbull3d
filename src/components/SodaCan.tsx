@@ -17,9 +17,9 @@ const metalMaterial = new THREE.MeshStandardMaterial({
   metalness: 1,
   color: "#bbbbbb",
 });
-export function SodaCan(props) {
-  const { nodes, materials } = useGLTF('/can-red.glb');
-    const labels = useTexture(flavorTextures);
+export function SodaCan(props:any) {
+  const { nodes, materials }:any = useGLTF('/can-red.glb');
+    const labels:any = useTexture(flavorTextures);
 
   // Fixes upside down labels
   labels.strawberryLemonade.flipY = true;
@@ -28,7 +28,7 @@ export function SodaCan(props) {
   labels.grape.flipY = true;
   labels.lemonLime.flipY = true;
 
-  const label = labels[props.flavor];
+  const label:any = labels[props.flavor];
   return (
     <group {...props} position={[0, -1, 0]} dispose={null} scale={.12} rotation={[Math.PI / 2, 0, 0]}>
       {/* <PerspectiveCamera makeDefault={false} fov={25} position={[0, 0, 35]} /> */}
