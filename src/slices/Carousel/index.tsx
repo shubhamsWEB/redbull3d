@@ -19,7 +19,7 @@ const FLAVORS: {
   { flavor: "lemonLime", color: "#0070B8", name: "Summer Edition" },
   { flavor: "watermelon", color: "#FFCB03", name: "Yellow Edition" },
   { flavor: "grape", color: "#009AD8", name: "Sugarfree Wiiings" },
-  { flavor: "strawberryLemonade", color: "#FFF", name: "Energy Drink" },
+  { flavor: "strawberryLemonade", color: "#EF4151", name: "Energy Drink" },
 ];
 
 /**
