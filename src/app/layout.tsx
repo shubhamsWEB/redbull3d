@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import ViewCanvas from "@/components/ViewCanvas";
 import Footer from "@/components/Footer";
+import { Analytics } from "@vercel/analytics/react"
 
 const alpino = localFont({
   src: "../../public/fonts/Bull-Bold.woff2",
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className="overflow-x-hidden bg-[#0070B8]">
         <Header />
         <main>
+          <Analytics/>
           {children}
           <ViewCanvas />
         </main>

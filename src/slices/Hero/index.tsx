@@ -121,7 +121,7 @@ const Hero = ({ slice }: any): JSX.Element => {
               />
             </h1>
             <div className="hero-subheading mt-12 text-5xl font-semibold text-[#FFCC01] lg:text-6xl">
-              <h1 className="uppercase">Gives you Wiiings</h1>
+              <h1 className="uppercase">Gives you Wiiingss</h1>
             </div>
             <Button
               buttonLink={'/'}
