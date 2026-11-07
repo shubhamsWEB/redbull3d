@@ -70,7 +70,8 @@ const towerShader = {
     }`,
 };
 
-export default function Circuit({ can, scroll, reduced, mobile, embedded }: WorldProps) {
+export default function Circuit({ can, scroll, reduced, mobile, embedded, lite, fx = true }: WorldProps) {
+  const low = mobile || !!lite; // Geometry and particle density.
   const smooth = useSmooth(scroll);
   const { camera } = useThree();
   const canRef = useRef<THREE.Group>(null);
@@ -86,24 +87,24 @@ export default function Circuit({ can, scroll, reduced, mobile, embedded }: Worl
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const towerSeeds = useMemo(
     () =>
-      Array.from({ length: mobile ? 60 : 130 }, (_, i) => ({
+      Array.from({ length: low ? 60 : 130 }, (_, i) => ({
         side: i % 2 ? 1 : -1,
         x: THREE.MathUtils.randFloat(7, 24),
         z: Math.random() * LENGTH,
         w: THREE.MathUtils.randFloat(1.6, 4),
         h: THREE.MathUtils.randFloat(3, 15),
       })),
-    [mobile],
+    [low],
   );
   const trailSeeds = useMemo(
     () =>
-      Array.from({ length: mobile ? 40 : 90 }, (_, i) => ({
+      Array.from({ length: low ? 40 : 90 }, (_, i) => ({
         x: (i % 2 ? 1 : -1) * THREE.MathUtils.randFloat(0.9, 3.2),
         y: THREE.MathUtils.randFloat(-1.1, -0.72),
         z: Math.random() * LENGTH,
         rate: THREE.MathUtils.randFloat(1.25, 2.1),
       })),
-    [mobile],
+    [low],
   );
 
   useFrame((state, dt) => {
@@ -190,14 +191,14 @@ export default function Circuit({ can, scroll, reduced, mobile, embedded }: Worl
         <boxGeometry />
         <meshBasicMaterial color={[6, 0.9, 0.8]} toneMapped={false} />
       </instancedMesh>
-      <Drift count={mobile ? 120 : 400} box={[14, 5, 28]} center={[0, 0.4, -9]} dir={[0, 0.03, 1]} color="#ff6b5e" size={16} travel={embers} opacity={0.75} />
+      <Drift count={low ? 120 : 400} box={[14, 5, 28]} center={[0, 0.4, -9]} dir={[0, 0.03, 1]} color="#ff6b5e" size={16} travel={embers} opacity={0.75} />
 
       <WorldCan ref={canRef} flavor={can.slug} smooth={smooth} reduced={reduced} steer={0.1} />
 
       <pointLight intensity={7} position={[0, -0.8, 2.2]} color="#ff2b3d" decay={1.2} />
       <spotLight intensity={16} position={[1.5, 3, 4.2]} angle={0.55} penumbra={0.8} color="#ffe4d0" decay={1.4} />
       <Environment files="/hdr/lobby.hdr" environmentIntensity={0.45} />
-      <Fx smooth={smooth} mobile={mobile || !!embedded} bloom={0.85} threshold={1} />
+      <Fx smooth={smooth} mobile={mobile || !!embedded || !fx} bloom={0.85} threshold={1} />
     </>
   );
 }

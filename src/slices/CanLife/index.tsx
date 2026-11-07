@@ -9,6 +9,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import Reveal from "@/components/Reveal";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import Safe3D, { Still } from "@/components/Safe3D";
+import { CANS } from "@/data/cans";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -66,11 +68,13 @@ export default function CanLife() {
 
   return (
     <section ref={root} className="can-life relative z-[40] h-[640vh] bg-carbon text-white">
-      <div className="sticky top-0 h-screen overflow-hidden">
-        <Stage scroll={scroll} active={inView} reduced={reduced} />
+      <div className="sticky top-0 h-svh overflow-hidden">
+        <Safe3D fallback={<Still src={CANS[0].packshot} alt="Red Bull Energy Drink" />}>
+          <Stage scroll={scroll} active={inView} reduced={reduced} />
+        </Safe3D>
       </div>
 
-      <div className="pointer-events-none sticky top-0 z-[40] -mt-[100vh] flex h-screen flex-col overflow-hidden">
+      <div className="pointer-events-none sticky top-0 z-[40] -mt-[100svh] flex h-svh flex-col overflow-hidden">
         <div className="px-4 pt-24 md:px-10">
           <p className="micro text-sun">{"Lifecycle // Aluminium"}</p>
           <Reveal text="A can could have more than one life" className="display mt-3 max-w-[11ch] text-4xl md:text-[5.6vw]" />

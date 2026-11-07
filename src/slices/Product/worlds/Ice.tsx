@@ -42,7 +42,8 @@ const terrainShader = {
     }`,
 };
 
-export default function Ice({ can, scroll, reduced, mobile, embedded }: WorldProps) {
+export default function Ice({ can, scroll, reduced, mobile, embedded, lite, fx = true }: WorldProps) {
+  const low = mobile || !!lite; // Geometry and particle density.
   const smooth = useSmooth(scroll);
   const bank = useRef<THREE.Group>(null);
   const shards = useRef<THREE.InstancedMesh>(null);
@@ -100,11 +101,11 @@ export default function Ice({ can, scroll, reduced, mobile, embedded }: WorldPro
       <fog attach="fog" args={[FOG, 14, 60]} />
       <SkyDome top="#2f84c9" bottom={FOG} sun={[-0.5, 0.42, -0.75]} />
       <mesh position={[0, -2.3, -24]} rotation={[-Math.PI / 2, 0, 0]} frustumCulled={false}>
-        <planeGeometry args={[70, 66, mobile ? 90 : 220, mobile ? 90 : 220]} />
+        <planeGeometry args={[70, 66, low ? 90 : 220, low ? 90 : 220]} />
         <shaderMaterial args={[terrainShader]} uniforms={uniforms} />
       </mesh>
 
-      <Drift count={mobile ? 500 : 1800} box={[12, 8, 16]} center={[0, 0.2, -5]} dir={[0.14, -0.1, 1]} color="#ffffff" size={46} travel={snow} opacity={0.9} />
+      <Drift count={low ? 500 : 1800} box={[12, 8, 16]} center={[0, 0.2, -5]} dir={[0.14, -0.1, 1]} color="#ffffff" size={46} travel={snow} opacity={0.9} />
 
       <group ref={bank}>
         <WorldCan flavor={can.slug} smooth={smooth} reduced={reduced} steer={0.08} />
@@ -117,7 +118,7 @@ export default function Ice({ can, scroll, reduced, mobile, embedded }: WorldPro
       <directionalLight intensity={3.4} position={[-3, 4, 3]} color="#fff6e6" />
       <hemisphereLight intensity={0.8} color="#bfe6ff" groundColor="#3e6d8e" />
       <Environment files="/hdr/field.hdr" environmentIntensity={0.85} />
-      <Fx smooth={smooth} mobile={mobile || !!embedded} bloom={0.45} threshold={0.92} />
+      <Fx smooth={smooth} mobile={mobile || !!embedded || !fx} bloom={0.45} threshold={0.92} />
     </>
   );
 }

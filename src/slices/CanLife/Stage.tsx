@@ -4,11 +4,14 @@
 // All deformation runs in the vertex shader on the real can geometry.
 import { Suspense, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { PerformanceMonitor, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import { useCanLabel } from "@/components/SodaCan";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useStore } from "@/hooks/useStore";
+import { useQuality, useQualityStore } from "@/lib/quality";
+import WarmSignal from "@/components/WarmSignal";
 import { bell, Drift, FRONT, Fx, lerp, NOISE, Scroll, smoothstep, useSmooth } from "@/slices/Product/worlds/shared";
 
 export const BEATS = { slam: [0.2, 0.3], release: [0.34, 0.43], heat: [0.38, 0.5], melt: [0.44, 0.62], form: [0.64, 0.84], print: [0.82, 0.95] };
@@ -139,7 +142,7 @@ function Sparks({ count, burst }: { count: number; burst: { value: number } }) {
   );
 }
 
-function Scene({ scroll, mobile, reduced }: { scroll: Scroll; mobile: boolean; reduced: boolean }) {
+function Scene({ scroll, mobile, reduced, fx, lite }: { scroll: Scroll; mobile: boolean; reduced: boolean; fx: boolean; lite: boolean }) {
   const smooth = useSmooth(scroll);
   const { nodes }: any = useGLTF("/can-red.glb");
   const label = useCanLabel("energy-drink");
@@ -267,16 +270,16 @@ function Scene({ scroll, mobile, reduced }: { scroll: Scroll; mobile: boolean; r
           />
         </mesh>
 
-        <Sparks count={mobile ? 120 : 360} burst={burst} />
+        <Sparks count={mobile || lite ? 120 : 360} burst={burst} />
         <group ref={embers} visible={false}>
-          <Drift count={mobile ? 80 : 240} box={[2.6, 3, 2]} center={[0, 0.3, 0]} dir={[0.05, 1, 0]} color="#ff9a3c" size={20} travel={emberTravel} opacity={0.9} />
+          <Drift count={mobile || lite ? 80 : 240} box={[2.6, 3, 2]} center={[0, 0.3, 0]} dir={[0.05, 1, 0]} color="#ff9a3c" size={20} travel={emberTravel} opacity={0.9} />
         </group>
       </group>
 
       <directionalLight intensity={2.6} position={[-2, 3, 4]} />
       <hemisphereLight intensity={0.6} color="#a5b4c4" groundColor="#0B0E14" />
       {/* No tone mapping: the label stays true, and only the overbright molten metal crosses the bloom threshold. */}
-      <Fx smooth={smooth} mobile={mobile} bloom={0.55} threshold={1.05} tone={false} />
+      <Fx smooth={smooth} mobile={mobile || !fx} bloom={0.55} threshold={1.05} tone={false} />
     </>
   );
 }
@@ -284,16 +287,21 @@ function Scene({ scroll, mobile, reduced }: { scroll: Scroll; mobile: boolean; r
 export default function Stage({ scroll, active, reduced }: { scroll: Scroll; active: boolean; reduced: boolean }) {
   const isDesktop = useMediaQuery("(min-width: 768px)", true);
   const [warm, setWarm] = useState(false);
+  const q = useQuality();
+  const wiping = useStore((st) => st.wiping);
+  const downgrade = useQualityStore((s) => s.downgrade);
   return (
     <Canvas
-      frameloop={active || !warm ? "always" : "never"}
-      dpr={[1, isDesktop ? 1.5 : 1.25]}
+      frameloop={wiping ? "never" : active || !warm ? "always" : "never"}
+      dpr={q.dpr}
       camera={{ fov: 32, position: [0, 0, 5], near: 0.1, far: 60 }}
       gl={{ antialias: !isDesktop, powerPreference: "high-performance" }}
       onCreated={() => setTimeout(() => setWarm(true), 1500)}
     >
+      {warm && <PerformanceMonitor onDecline={downgrade} />}
       <Suspense fallback={null}>
-        <Scene scroll={scroll} mobile={!isDesktop} reduced={reduced} />
+        <Scene scroll={scroll} mobile={!isDesktop} reduced={reduced} fx={q.fx} lite={q.lite} />
+        <WarmSignal />
       </Suspense>
     </Canvas>
   );

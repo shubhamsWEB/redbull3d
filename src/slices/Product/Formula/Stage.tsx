@@ -3,13 +3,16 @@
 // Empty glass can on a dark stage. Each ingredient's molecule assembles, collapses into a stream and fills the can.
 import { MutableRefObject, Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, useGLTF } from "@react-three/drei";
+import { Environment, PerformanceMonitor, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 
 import { SodaCan } from "@/components/SodaCan";
 import { Can } from "@/data/cans";
 import { Molecule } from "@/data/molecules";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useStore } from "@/hooks/useStore";
+import { useQuality, useQualityStore } from "@/lib/quality";
+import WarmSignal from "@/components/WarmSignal";
 import { damp, FRONT, Fx, smoothstep, useSmooth } from "@/slices/Product/worlds/shared";
 
 export type Beat = { step: number; local: number; p: number };
@@ -289,7 +292,7 @@ function GlassCan({ can, layout, level, reveal, lidOpen }: { can: Can; layout: L
   );
 }
 
-function Scene({ can, molecules, beat, fillEnd, mobile, reduced }: { can: Can; molecules: Molecule[]; beat: MutableRefObject<Beat>; fillEnd: number; mobile: boolean; reduced: boolean }) {
+function Scene({ can, molecules, beat, fillEnd, mobile, reduced, fx }: { can: Can; molecules: Molecule[]; beat: MutableRefObject<Beat>; fillEnd: number; mobile: boolean; reduced: boolean; fx: boolean }) {
   const scroll = useRef({ progress: 0, velocity: 0 });
   const smooth = useSmooth(scroll as any);
   const layout = useMemo<Layout>(
@@ -330,7 +333,7 @@ function Scene({ can, molecules, beat, fillEnd, mobile, reduced }: { can: Can; m
       <pointLight intensity={8} position={[layout.canX, -0.2, 1.2]} color={can.liquid[1]} decay={1.4} />
       <Environment files="/hdr/lobby.hdr" environmentIntensity={0.8} />
       {/* No tone mapping: the finished label stays true and only bright highlights bloom. */}
-      <Fx smooth={smooth} mobile={mobile} bloom={0.45} threshold={1.05} tone={false} />
+      <Fx smooth={smooth} mobile={mobile || !fx} bloom={0.45} threshold={1.05} tone={false} />
     </>
   );
 }
@@ -339,16 +342,21 @@ export default function Stage(props: { can: Can; molecules: Molecule[]; beat: Mu
   const { active, ...rest } = props;
   const isDesktop = useMediaQuery("(min-width: 768px)", true);
   const [warm, setWarm] = useState(false);
+  const q = useQuality();
+  const wiping = useStore((st) => st.wiping);
+  const downgrade = useQualityStore((s) => s.downgrade);
   return (
     <Canvas
-      frameloop={active || !warm ? "always" : "never"}
-      dpr={[1, isDesktop ? 1.5 : 1.25]}
+      frameloop={wiping ? "never" : active || !warm ? "always" : "never"}
+      dpr={q.dpr}
       camera={{ fov: 32, position: [0, 0, 5], near: 0.1, far: 60 }}
       gl={{ antialias: !isDesktop, powerPreference: "high-performance" }}
       onCreated={() => setTimeout(() => setWarm(true), 1500)}
     >
+      {warm && <PerformanceMonitor onDecline={downgrade} />}
       <Suspense fallback={null}>
-        <Scene {...rest} mobile={!isDesktop} />
+        <Scene {...rest} mobile={!isDesktop} fx={q.fx} />
+        <WarmSignal />
       </Suspense>
     </Canvas>
   );

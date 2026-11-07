@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { CANS, World } from "@/data/cans";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useStore } from "@/hooks/useStore";
+import { useQuality, useQualityStore } from "@/lib/quality";
 import Stratosphere from "@/slices/Product/worlds/Stratosphere";
 import Ice from "@/slices/Product/worlds/Ice";
 import Circuit from "@/slices/Product/worlds/Circuit";
@@ -59,9 +60,9 @@ const dissolve = {
     }`,
 };
 
-function Worlds({ mix, reduced, mobile, onWarm }: { mix: Mix; reduced: boolean; mobile: boolean; onWarm: () => void }) {
+function Worlds({ mix, reduced, mobile, lite, fbo, onWarm }: { mix: Mix; reduced: boolean; mobile: boolean; lite: boolean; fbo: number; onWarm: () => void }) {
   const { gl, size, pointer } = useThree();
-  const scale = mobile ? 0.8 : 1;
+  const scale = fbo * (mobile ? 0.8 : 1);
   const opts = { type: THREE.HalfFloatType, samples: 0, depth: true };
   const fboA = useFBO(size.width * scale, size.height * scale, opts);
   const fboB = useFBO(size.width * scale, size.height * scale, opts);
@@ -139,7 +140,7 @@ function Worlds({ mix, reduced, mobile, onWarm }: { mix: Mix; reduced: boolean; 
         const WorldComponent = WORLDS[can.world.scape];
         return createPortal(
           <Suspense fallback={null}>
-            <WorldComponent can={can} scroll={stages[i].scroll as any} reduced={reduced} mobile={mobile} embedded />
+            <WorldComponent can={can} scroll={stages[i].scroll as any} reduced={reduced} mobile={mobile} lite={lite} embedded />
           </Suspense>,
           stages[i].scene,
           { camera: stages[i].camera, pointer } as any,
@@ -155,19 +156,26 @@ function Worlds({ mix, reduced, mobile, onWarm }: { mix: Mix; reduced: boolean; 
 
 export default function Portals({ mix, reduced, active }: { mix: Mix; reduced: boolean; active: boolean }) {
   const isDesktop = useMediaQuery("(min-width: 768px)", true);
-  const [low, setLow] = useState(false);
+  const q = useQuality();
+  const wiping = useStore((st) => st.wiping);
+  const downgrade = useQualityStore((s) => s.downgrade);
   const [warm, setWarm] = useState(false);
-  const setWorldsReady = useStore((s) => s.setWorldsReady);
+  // Busy until every world has compiled: the preloader and page wipes wait on it.
+  useEffect(() => {
+    useStore.getState().addBusy();
+  }, []);
   return (
-    <Canvas frameloop={active || !warm ? "always" : "never"} dpr={low ? 0.75 : [1, isDesktop ? 1.25 : 1]} shadows={isDesktop && !low} gl={{ antialias: false, powerPreference: "high-performance" }}>
-      {warm && <PerformanceMonitor onDecline={() => setLow(true)} />}
+    <Canvas frameloop={wiping ? "never" : active || !warm ? "always" : "never"} dpr={Math.min(q.dpr, 1.25)} shadows={isDesktop && q.tier === 2} gl={{ antialias: false, powerPreference: "high-performance" }}>
+      {warm && <PerformanceMonitor onDecline={downgrade} />}
       <Worlds
         mix={mix}
         reduced={reduced}
         mobile={!isDesktop}
+        lite={q.lite}
+        fbo={q.fbo}
         onWarm={() => {
           setWarm(true);
-          setWorldsReady();
+          useStore.getState().doneBusy();
         }}
       />
     </Canvas>

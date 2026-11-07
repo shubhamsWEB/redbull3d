@@ -50,7 +50,8 @@ const wedge = (() => {
   return g;
 })();
 
-export default function Gap({ can, scroll, reduced, mobile, embedded }: WorldProps) {
+export default function Gap({ can, scroll, reduced, mobile, embedded, lite, fx = true }: WorldProps) {
+  const low = mobile || !!lite; // Geometry and particle density.
   const smooth = useSmooth(scroll);
   const { camera } = useThree();
   const rig = useRef<THREE.Group>(null);
@@ -62,7 +63,7 @@ export default function Gap({ can, scroll, reduced, mobile, embedded }: WorldPro
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const seeds = useMemo(
     () =>
-      Array.from({ length: mobile ? 90 : 260 }, () => ({
+      Array.from({ length: low ? 90 : 260 }, () => ({
         x: THREE.MathUtils.randFloat(-12, 13),
         y: Math.random() * 7,
         z: THREE.MathUtils.randFloat(-5, 2.8),
@@ -70,7 +71,7 @@ export default function Gap({ can, scroll, reduced, mobile, embedded }: WorldPro
         r: Math.random() * 6,
         s: THREE.MathUtils.randFloat(0.022, 0.05),
       })),
-    [mobile],
+    [low],
   );
 
   useFrame((state, dt) => {
@@ -183,7 +184,7 @@ export default function Gap({ can, scroll, reduced, mobile, embedded }: WorldPro
       </instancedMesh>
 
       <directionalLight
-        castShadow={!mobile}
+        castShadow={!low}
         intensity={4.2}
         position={[-3, 5, 5]}
         color="#ffdcc4"
@@ -195,7 +196,7 @@ export default function Gap({ can, scroll, reduced, mobile, embedded }: WorldPro
       />
       <hemisphereLight intensity={0.85} color="#ffcfb5" groundColor="#6b3250" />
       <Environment files="/hdr/lobby.hdr" environmentIntensity={0.65} />
-      <Fx smooth={smooth} mobile={mobile || !!embedded} bloom={0.75} threshold={0.82} />
+      <Fx smooth={smooth} mobile={mobile || !!embedded || !fx} bloom={0.75} threshold={0.82} />
     </>
   );
 }

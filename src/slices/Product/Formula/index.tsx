@@ -11,6 +11,7 @@ import { Can } from "@/data/cans";
 import { ACESULFAME_K, CAFFEINE, GLUCOSE, Molecule, NIACIN, TAURINE } from "@/data/molecules";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { Beat } from "./Stage";
+import Safe3D, { Still } from "@/components/Safe3D";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -83,11 +84,13 @@ export default function Formula({ can }: { can: Can }) {
 
   return (
     <section ref={root} className="formula relative h-[640vh] bg-carbon text-white">
-      <div className="sticky top-0 h-screen overflow-hidden">
-        <Stage can={can} molecules={steps.map((s) => s.mol)} beat={beat} fillEnd={FILL_END} active={inView} reduced={reduced} />
+      <div className="sticky top-0 h-svh overflow-hidden">
+        <Safe3D fallback={<Still src={can.packshot} alt={can.name} />}>
+          <Stage can={can} molecules={steps.map((s) => s.mol)} beat={beat} fillEnd={FILL_END} active={inView} reduced={reduced} />
+        </Safe3D>
       </div>
 
-      <div className="pointer-events-none sticky top-0 z-[40] -mt-[100vh] flex h-screen flex-col overflow-hidden">
+      <div className="pointer-events-none sticky top-0 z-[40] -mt-[100svh] flex h-svh flex-col overflow-hidden">
         <div className="micro flex justify-between border-b border-hairline px-4 pb-3 pt-20 md:px-10">
           <span>{"Formula // Values per 250 ml"}</span>
           <span className="tabular-nums text-sun">{sealed ? "SEALED" : `${String(step + 1).padStart(2, "0")} / ${String(steps.length).padStart(2, "0")}`}</span>

@@ -27,6 +27,10 @@ module.exports = {
           "10%": { opacity: "1" },
           "100%": { transform: "translateY(-105vh) translateX(14px)", opacity: "0" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(6px)" },
+          "50%": { transform: "translateY(-6px)" },
+        },
         "snap-in": {
           "0%": { transform: "translateX(-60px) skewX(-8deg)", opacity: "0" },
           "100%": { transform: "none", opacity: "1" },

@@ -10,6 +10,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { CANS } from "@/data/cans";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import Safe3D, { Still } from "@/components/Safe3D";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -52,11 +53,13 @@ export default function FiveWorlds() {
 
   return (
     <section id="cans" ref={root} className="relative scroll-mt-0 bg-carbon text-white" style={{ height: `${CANS.length * 170}vh` }}>
-      <div className="sticky top-0 h-screen overflow-hidden">
-        <Portals mix={mix} reduced={reduced} active={inView} />
+      <div className="sticky top-0 h-svh overflow-hidden">
+        <Safe3D fallback={<Still src={can.packshot} alt={can.name} />}>
+          <Portals mix={mix} reduced={reduced} active={inView} />
+        </Safe3D>
       </div>
 
-      <div className="pointer-events-none sticky top-0 z-[40] -mt-[100vh] flex h-screen flex-col justify-between">
+      <div className="pointer-events-none sticky top-0 z-[40] -mt-[100svh] flex h-svh flex-col justify-between">
         <div className="micro flex justify-between border-b border-hairline px-4 pb-3 pt-20 md:px-10">
           <span>{"Five cans // Five worlds"}</span>
           <span className="tabular-nums text-sun">{String(index + 1).padStart(2, "0")} / {String(CANS.length).padStart(2, "0")}</span>

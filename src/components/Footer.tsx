@@ -27,11 +27,23 @@ export default function Footer() {
         <Link href="/" aria-label="Home" className="shrink-0">
           <Image src="/images/redbulllogo.svg" alt="Red Bull" width={225} height={36} />
         </Link>
-        <p className="max-w-xl text-xs font-normal text-silver">
-          Unofficial concept created by Shubham Agrawal as a design pitch. Not affiliated with, endorsed by or sponsored by
-          Red Bull GmbH. Red Bull names, marks and photography belong to their owners and are shown from redbull.com/in-en for
-          presentation only; can wraps in 3D and &ldquo;world&rdquo; copy are concept recreations.
-        </p>
+        <div className="max-w-xl">
+          <p className="micro text-silver">{"Design & build // Credits"}</p>
+          <a
+            href="https://shubhamsweb.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-cursor="Portfolio"
+            className="btn-signal chamfer mt-3 inline-flex"
+          >
+            Made by Shubham Agrawal <span aria-hidden>-&gt;</span>
+          </a>
+          <p className="mt-6 text-xs font-normal text-silver">
+            Unofficial concept created as a design pitch. Not affiliated with, endorsed by or sponsored by Red Bull GmbH. Red
+            Bull names, marks and photography belong to their owners and are shown from redbull.com/in-en for presentation
+            only; can wraps in 3D and &ldquo;world&rdquo; copy are concept recreations.
+          </p>
+        </div>
       </div>
       <p aria-hidden className="foot-word display mt-8 whitespace-nowrap text-center text-[27vw] !leading-[.78] text-sun">
         Wiiings

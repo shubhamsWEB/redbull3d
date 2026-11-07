@@ -61,7 +61,8 @@ const waterShader = {
     }`,
 };
 
-export default function River({ can, scroll, reduced, mobile, embedded }: WorldProps) {
+export default function River({ can, scroll, reduced, mobile, embedded, lite, fx = true }: WorldProps) {
+  const low = mobile || !!lite; // Geometry and particle density.
   const smooth = useSmooth(scroll);
   const canRef = useRef<THREE.Group>(null);
   const rocks = useRef<THREE.InstancedMesh>(null);
@@ -88,16 +89,16 @@ export default function River({ can, scroll, reduced, mobile, embedded }: WorldP
   );
   const treeSeeds = useMemo(
     () =>
-      Array.from({ length: mobile ? 70 : 170 }, (_, i) => ({
+      Array.from({ length: low ? 70 : 170 }, (_, i) => ({
         side: i % 2 ? 1 : -1,
         x: THREE.MathUtils.randFloat(7.5, 18),
         z: Math.random() * 40,
         h: THREE.MathUtils.randFloat(4, 11),
       })),
-    [mobile],
+    [low],
   );
   const sprayData = useMemo(() => {
-    const n = mobile ? 180 : 500;
+    const n = low ? 180 : 500;
     const a = new Float32Array(n * 3);
     for (let i = 0; i < n * 3; i += 3) {
       a[i] = (Math.random() - 0.5) * 2;
@@ -105,7 +106,7 @@ export default function River({ can, scroll, reduced, mobile, embedded }: WorldP
       a[i + 2] = Math.random();
     }
     return a;
-  }, [mobile]);
+  }, [low]);
 
   useFrame((state, dt) => {
     const { p, push } = smooth.current;
@@ -163,7 +164,7 @@ export default function River({ can, scroll, reduced, mobile, embedded }: WorldP
       <SkyDome top="#3e8f3a" bottom={FOG} sun={[-0.35, 0.34, -0.85]} />
 
       <mesh position={[0, -0.95, -15]} rotation={[-Math.PI / 2, 0, 0]} frustumCulled={false}>
-        <planeGeometry args={[44, 42, mobile ? 90 : 240, mobile ? 90 : 240]} />
+        <planeGeometry args={[44, 42, low ? 90 : 240, low ? 90 : 240]} />
         <shaderMaterial args={[waterShader]} uniforms={uniforms} />
       </mesh>
 
@@ -207,7 +208,7 @@ export default function River({ can, scroll, reduced, mobile, embedded }: WorldP
           />
         </points>
       )}
-      <Drift count={mobile ? 150 : 500} box={[20, 7, 24]} center={[0, 1.6, -9]} dir={[0, -0.05, 1]} color="#f4ffd6" size={22} travel={mist} opacity={0.5} />
+      <Drift count={low ? 150 : 500} box={[20, 7, 24]} center={[0, 1.6, -9]} dir={[0, -0.05, 1]} color="#f4ffd6" size={22} travel={mist} opacity={0.5} />
 
       <group ref={canRef}>
         <WorldCan flavor={can.slug} smooth={smooth} reduced={reduced} steer={0} />
@@ -216,7 +217,7 @@ export default function River({ can, scroll, reduced, mobile, embedded }: WorldP
       <directionalLight intensity={3.2} position={[-3, 5, 2]} color="#fff4d0" />
       <hemisphereLight intensity={0.8} color="#dfffb5" groundColor="#16462a" />
       <Environment files="/hdr/field.hdr" environmentIntensity={0.7} />
-      <Fx smooth={smooth} mobile={mobile || !!embedded} bloom={0.5} threshold={0.95} />
+      <Fx smooth={smooth} mobile={mobile || !!embedded || !fx} bloom={0.5} threshold={0.95} />
     </>
   );
 }

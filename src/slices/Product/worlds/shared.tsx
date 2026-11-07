@@ -10,7 +10,7 @@ import { SodaCan } from "@/components/SodaCan";
 import { Can } from "@/data/cans";
 
 export type Scroll = MutableRefObject<{ progress: number; velocity: number }>;
-export type WorldProps = { can: Can; scroll: Scroll; reduced: boolean; mobile: boolean; embedded?: boolean };
+export type WorldProps = { can: Can; scroll: Scroll; reduced: boolean; mobile: boolean; embedded?: boolean; lite?: boolean; fx?: boolean };
 export type Smooth = MutableRefObject<{ p: number; push: number; velocity: number }>;
 
 export const { damp, lerp, smoothstep } = THREE.MathUtils;

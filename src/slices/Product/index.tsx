@@ -4,6 +4,11 @@ import { ComponentType, Suspense, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Canvas } from "@react-three/fiber";
+import { PerformanceMonitor } from "@react-three/drei";
+import Safe3D, { Still } from "@/components/Safe3D";
+import WarmSignal from "@/components/WarmSignal";
+import { useStore } from "@/hooks/useStore";
+import { useQuality, useQualityStore } from "@/lib/quality";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -36,6 +41,9 @@ export default function Product({ slug }: { slug: string }) {
   const worldScroll = useRef({ progress: 0, velocity: 0 });
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)", false);
   const isDesktop = useMediaQuery("(min-width: 768px)", true);
+  const q = useQuality();
+  const wiping = useStore((st) => st.wiping);
+  const downgrade = useQualityStore((s) => s.downgrade);
   const [worldOn, setWorldOn] = useState(true);
   const WorldComponent = WORLDS[world.scape];
 
@@ -74,22 +82,26 @@ export default function Product({ slug }: { slug: string }) {
     <div ref={root} className="bg-black text-white">
       {/* The world: scroll drives the fall, the HUD and the can */}
       <section className="world relative h-[600vh]">
-        <div className="sticky top-0 h-screen overflow-hidden">
+        <div className="sticky top-0 h-svh overflow-hidden">
+          <Safe3D fallback={<Still src={can.packshot} alt={can.name} />}>
           <Canvas
-            frameloop={worldOn ? "always" : "never"}
-            dpr={[1, isDesktop ? 1.5 : 1.25]}
-            shadows={isDesktop}
+            frameloop={wiping ? "never" : worldOn ? "always" : "never"}
+            dpr={q.dpr}
+            shadows={isDesktop && q.tier === 2}
             camera={{ fov: 32, position: [0, 0, 5], near: 0.1, far: 200 }}
             gl={{ antialias: !isDesktop }}
           >
+            <PerformanceMonitor onDecline={downgrade} />
             <Suspense fallback={null}>
-              <WorldComponent can={can} scroll={worldScroll} reduced={reduced} mobile={!isDesktop} />
+              <WorldComponent can={can} scroll={worldScroll} reduced={reduced} mobile={!isDesktop} lite={q.lite} fx={q.fx} />
+              <WarmSignal />
             </Suspense>
           </Canvas>
+          </Safe3D>
         </div>
 
         {/* Separate sticky layer: the sticky above is a stacking context below the canvas, this one sits over it */}
-        <div className="pointer-events-none sticky top-0 z-[40] -mt-[100vh] h-screen overflow-hidden [text-shadow:0_2px_18px_rgba(0,10,40,.55)]">
+        <div className="pointer-events-none sticky top-0 z-[40] -mt-[100svh] h-svh overflow-hidden [text-shadow:0_2px_18px_rgba(0,10,40,.55)]">
           <div className="world-title absolute inset-x-4 top-28 z-[40] origin-left md:inset-x-auto md:left-10 md:top-1/2 md:w-[52vw] md:-translate-y-1/2">
             <div>
               <p className="text-lg uppercase tracking-[0.3em] md:text-2xl">{world.name}</p>

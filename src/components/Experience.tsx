@@ -10,6 +10,8 @@ import { useProgress } from "@react-three/drei";
 
 import { CANS } from "@/data/cans";
 import { useStore } from "@/hooks/useStore";
+import { useQualityStore } from "@/lib/quality";
+import { createFizzWipe, FizzWipe } from "@/lib/fizzWipe";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -56,10 +58,12 @@ function hiss() {
 }
 
 function Preloader() {
-  const { progress, active } = useProgress();
+  const { progress, active, total } = useProgress();
   const pathname = usePathname();
   const enter = useStore((s) => s.enter);
-  const worldsReady = useStore((s) => s.worldsReady);
+  const busy = useStore((s) => s.busy);
+  const busyEver = useStore((s) => s.busyEver);
+  const webgl = useQualityStore((s) => s.webgl);
   const [count, setCount] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [gate, setGate] = useState(false);
@@ -75,8 +79,8 @@ function Preloader() {
     // A slow network must never trap the visitor, and a page with nothing to load must not wait at all.
     const failsafe = setTimeout(() => setLoaded(true), 12000);
     const idle = setTimeout(() => {
-      if (location.pathname !== "/" && !useProgress.getState().active) setLoaded(true);
-    }, 3000);
+      if ((location.pathname !== "/" || !useQualityStore.getState().webgl) && !useProgress.getState().active) setLoaded(true);
+    }, useQualityStore.getState().webgl ? 3000 : 400);
     return () => {
       clearTimeout(failsafe);
       clearTimeout(idle);
@@ -91,9 +95,11 @@ function Preloader() {
       overwrite: true,
       onUpdate: () => setCount(Math.round(tween.current.v)),
     });
-    // The home page waits for all five worlds to be compiled, so they start instantly later.
-    if (progress >= 100 && !active && (pathname !== "/" || worldsReady)) setLoaded(true);
-  }, [progress, active, worldsReady, pathname]);
+    // Waits until every 3D scene has compiled, so nothing stalls once the visitor is in.
+    // Without WebGL nothing loads at all, so progress never reaches 100: "nothing to load" counts as done.
+    const assetsDone = !active && (progress >= 100 || (!webgl && total === 0));
+    if (assetsDone && busy === 0 && (busyEver || !webgl || pathname !== "/")) setLoaded(true);
+  }, [progress, active, total, busy, busyEver, webgl, pathname]);
 
   const startHold = () => {
     gsap.to(hold.current, {
@@ -211,13 +217,53 @@ function Preloader() {
   );
 }
 
-// Intercepts internal link clicks so every route change gets the same wipe, with no per-link wiring.
+// Intercepts internal link clicks so every route change gets the same transition, with no per-link wiring.
+// Visual: the Five Worlds soda dissolve. Logic: pause the outgoing page, navigate under cover, reveal only once ready.
 function PageWipe() {
   const router = useRouter();
   const pathname = usePathname();
   const root = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const fizz = useRef<FizzWipe | null>(null);
+  const anim = useRef({ in: 0, out: 0, color: [0.886, 0.106, 0.302] as [number, number, number] });
   const [label, setLabel] = useState({ text: "", color: "#E21B4D" });
   const waiting = useRef(false);
+
+  // Build the shader at startup, never mid-click. Falls back to a plain colour fill without WebGL2.
+  useEffect(() => {
+    if (!canvas.current) return;
+    try {
+      const tier = useQualityStore.getState().tier;
+      fizz.current = createFizzWipe(canvas.current, [0.5, 0.8, 1][tier], [14, 28, 42][tier]);
+    } catch {
+      fizz.current = null;
+    }
+    const onResize = () => fizz.current?.resize();
+    addEventListener("resize", onResize);
+    return () => removeEventListener("resize", onResize);
+  }, []);
+
+  // Redraws every frame while visible, not only while a tween runs, so the drink keeps fizzing while the next page
+  // loads instead of freezing into what looks like a loading screen.
+  const raf = useRef(0);
+  const frame = () => {
+    if (fizz.current) fizz.current.draw(anim.current);
+    else if (root.current) root.current.style.backgroundColor = anim.current.in > 0.5 && anim.current.out < 0.5 ? label.color : "transparent";
+  };
+  const startLoop = () => {
+    cancelAnimationFrame(raf.current);
+    let n = 0;
+    const tick = () => {
+      // Weak GPUs share the CPU with page loading: while fully covered, fizz at ~15fps so the load finishes sooner.
+      const slow = useQualityStore.getState().tier === 0 && root.current?.getAttribute("data-state") === "covered";
+      if (!slow || n++ % 4 === 0) frame();
+      raf.current = requestAnimationFrame(tick);
+    };
+    raf.current = requestAnimationFrame(tick);
+  };
+  const stopLoop = () => cancelAnimationFrame(raf.current);
+  useEffect(() => stopLoop, []);
+  const setState = (state: "moving" | "covered" | "hidden") => root.current?.setAttribute("data-state", state);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -230,25 +276,37 @@ function PageWipe() {
       const go = () => router.push(url.pathname + url.hash);
       if (reducedMotion() || waiting.current) return go();
       const can = CANS.find((c) => url.pathname.endsWith(c.slug));
-      setLabel({ text: can ? can.world.name : "Red Bull", color: can ? can.color : "#E21B4D" });
+      const color = can ? can.color : "#E21B4D";
+      setLabel({ text: can ? can.world.name : "Red Bull", color });
+      // Raw sRGB: the shader writes straight to the screen, so no linear conversion.
+      const hex = parseInt(color.slice(1), 16);
+      anim.current = { in: 0, out: 0, color: [(hex >> 16) / 255, ((hex >> 8) & 255) / 255, (hex & 255) / 255] };
       waiting.current = true;
-      gsap.set(root.current, { display: "flex" });
-      gsap.fromTo(
-        root.current!.querySelectorAll(".pw-col"),
-        { scaleY: 0, transformOrigin: "bottom" },
-        { scaleY: 1, duration: 0.42, ease: "expo.inOut", stagger: 0.03 },
-      );
-      gsap.fromTo(root.current!.querySelector(".pw-label"), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, delay: 0.35 });
-      gsap.delayedCall(0.8, go);
+      useStore.getState().setWiping(true);
+      gsap.set(root.current, { display: "block" });
+      setState("moving");
+      startLoop();
+      gsap.to(anim.current, {
+        in: 1,
+        duration: 0.9,
+        ease: "power2.inOut",
+        onComplete: () => {
+          setState("covered");
+          go();
+        },
+      });
+      gsap.fromTo(root.current!.querySelector(".pw-label"), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, delay: 0.55, ease: "expo.out" });
     };
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   useEffect(() => {
     if (!waiting.current) return;
     waiting.current = false;
-    // Hold the wipe until page height settles, so anchors land where they should and nothing jumps behind it.
+    useStore.getState().setWiping(false); // New page renders behind the cover so it can warm up.
+    // Hold the cover until page height settles and the new page's 3D has compiled, so the reveal has nothing left to do.
     let last = -1;
     let steady = 0;
     let ticks = 0;
@@ -257,10 +315,13 @@ function PageWipe() {
       steady = height === last ? steady + 1 : 0;
       last = height;
       ticks++;
-      if (steady < 3 && ticks < 25) return;
+      if ((steady < 3 || useStore.getState().busy > 0) && ticks < 45) return;
       clearInterval(timer);
       ScrollTrigger.refresh();
-      if (location.hash) {
+      if (!location.hash) {
+        if (lenis) lenis.scrollTo(0, { immediate: true, force: true });
+        else scrollTo(0, 0);
+      } else {
         const target = document.querySelector<HTMLElement>(location.hash);
         if (target) {
           const y = target.getBoundingClientRect().top + scrollY - 64;
@@ -268,27 +329,28 @@ function PageWipe() {
           else scrollTo(0, y);
         }
       }
+      setState("moving");
       gsap.to(root.current!.querySelector(".pw-label"), { opacity: 0, duration: 0.2 });
-      gsap.to(root.current!.querySelectorAll(".pw-col"), {
-        scaleY: 0,
-        transformOrigin: "top",
-        duration: 0.6,
-        ease: "power4.inOut",
-        stagger: 0.045,
+      // The drink drains away from the top, revealing the new page underneath.
+      gsap.to(anim.current, {
+        out: 1,
+        duration: 1,
+        ease: "power2.inOut",
         onComplete: () => {
+          stopLoop();
+          setState("hidden");
           gsap.set(root.current, { display: "none" });
         },
       });
     }, 100);
     return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   return (
-    <div ref={root} aria-hidden className="pointer-events-none fixed inset-0 z-[80] hidden overflow-hidden">
-      {COLUMNS.map((c) => (
-        <div key={c} className="pw-col h-full flex-1 -skew-x-12 scale-x-125" style={{ backgroundColor: label.color, marginLeft: c ? -1 : 0 }} />
-      ))}
-      <p className="pw-label display absolute inset-0 grid place-items-center px-4 text-center text-5xl text-white opacity-0 md:text-8xl">
+    <div ref={root} aria-hidden data-state="hidden" className="pointer-events-none fixed inset-0 z-[80] hidden">
+      <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
+      <p className="pw-label display absolute inset-0 grid place-items-center px-4 text-center text-5xl text-white opacity-0 [text-shadow:0_4px_30px_rgba(0,0,0,.35)] motion-safe:animate-[float_3.2s_ease-in-out_infinite] md:text-8xl">
         {label.text}
       </p>
     </div>

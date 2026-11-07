@@ -3,7 +3,6 @@ import { JetBrains_Mono } from "next/font/google";
 
 import "./globals.css";
 import Header from "@/components/Header";
-import ViewCanvas from "@/components/ViewCanvas";
 import Footer from "@/components/Footer";
 import Experience from "@/components/Experience";
 import { Analytics } from "@vercel/analytics/react"
@@ -37,7 +36,6 @@ export default function RootLayout({
         <main>
           <Analytics/>
           {children}
-          <ViewCanvas />
         </main>
         <Footer />
       </body>

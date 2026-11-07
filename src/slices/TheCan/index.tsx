@@ -9,6 +9,8 @@ import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import Safe3D, { Still } from "@/components/Safe3D";
+import { CANS } from "@/data/cans";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -77,12 +79,14 @@ export default function TheCan() {
 
   return (
     <section ref={root} className="relative h-[900vh] bg-carbon text-white" aria-label="Gives you wiiings">
-      <div className="sticky top-0 h-screen overflow-hidden">
-        <Stage scroll={scroll} active={inView} reduced={reduced} />
+      <div className="sticky top-0 h-svh overflow-hidden">
+        <Safe3D fallback={<Still src={CANS[0].packshot} alt="Red Bull Energy Drink" />}>
+          <Stage scroll={scroll} active={inView} reduced={reduced} />
+        </Safe3D>
         <div aria-hidden className="can-fade pointer-events-none absolute inset-0 bg-[#02030a] opacity-0" />
       </div>
 
-      <div className="pointer-events-none sticky top-0 z-[40] -mt-[100vh] h-screen overflow-hidden">
+      <div className="pointer-events-none sticky top-0 z-[40] -mt-[100svh] h-svh overflow-hidden">
         <div className="grid h-full place-items-center px-4 text-center">
           {BEATS.map((b, i) => (
             <h2 key={b.text} className={`beat-line display col-start-1 row-start-1 ${b.size.replace("low ", "")} ${b.size.startsWith("low") ? "self-end pb-20" : ""} ${i ? "opacity-0" : ""}`}>

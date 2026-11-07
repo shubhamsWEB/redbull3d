@@ -80,7 +80,7 @@ function Features() {
   );
   return (
     <section ref={root} className="relative z-[40] carbon text-white md:h-[420vh]">
-      <div className="py-20 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:justify-center md:overflow-hidden md:py-0">
+      <div className="py-20 md:sticky md:top-0 md:flex md:h-svh md:flex-col md:justify-center md:overflow-hidden md:py-0">
         <div className="px-4 md:px-10">
           <Heading kicker="Happening now" title="The world of Red Bull" />
         </div>
@@ -320,7 +320,7 @@ function TvBand() {
   );
   return (
     <section id="tv" ref={root} className="relative z-[40] h-[240vh] scroll-mt-16 bg-asphalt text-white">
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className="sticky top-0 h-svh overflow-hidden">
         <div className="tv-frame absolute inset-0 overflow-hidden bg-asphalt">
           <Photo src={photo(TV_IMAGE, 1920, 1200)} className="tv-photo absolute inset-0 h-full w-full object-cover" />
           <span aria-hidden className="absolute inset-0 bg-black/45" />

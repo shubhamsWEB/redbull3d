@@ -81,7 +81,8 @@ const glowShader = {
     }`,
 };
 
-export default function Stratosphere({ can, scroll, reduced, mobile, embedded }: WorldProps) {
+export default function Stratosphere({ can, scroll, reduced, mobile, embedded, lite, fx = true }: WorldProps) {
+  const low = mobile || !!lite; // Geometry and particle density.
   const smooth = useSmooth(scroll);
   const canRef = useRef<THREE.Group>(null);
   const planet = useRef<THREE.Group>(null);
@@ -137,9 +138,9 @@ export default function Stratosphere({ can, scroll, reduced, mobile, embedded }:
         </mesh>
       </group>
 
-      <Stars materialRef={starMat} count={mobile ? 900 : 2400} />
+      <Stars materialRef={starMat} count={low ? 900 : 2400} />
       <Drift
-        count={mobile ? 200 : 500}
+        count={low ? 200 : 500}
         box={[9, 7, 8]}
         center={[0, 0, -2]}
         dir={[0, 3.6, 0]}
@@ -161,7 +162,7 @@ export default function Stratosphere({ can, scroll, reduced, mobile, embedded }:
 
       <directionalLight intensity={3.2} position={[-2.5, 3, 3]} />
       <Environment files="/hdr/lobby.hdr" environmentIntensity={0.7} />
-      <Fx smooth={smooth} mobile={mobile || !!embedded} bloom={0.85} threshold={0.78} />
+      <Fx smooth={smooth} mobile={mobile || !!embedded || !fx} bloom={0.85} threshold={0.78} />
     </>
   );
 }

@@ -9,6 +9,8 @@ import { MeshSurfaceSampler } from "three/examples/jsm/math/MeshSurfaceSampler.j
 import FloatingCan from "@/components/FloatingCan";
 import { Reveal, SodaCan } from "@/components/SodaCan";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useQuality, useQualityStore } from "@/lib/quality";
+import WarmSignal from "@/components/WarmSignal";
 import { useStore } from "@/hooks/useStore";
 import { bell, damp, FRONT, Fx, lerp, Scroll, smoothstep, useSmooth } from "@/slices/Product/worlds/shared";
 import Wings from "./Wings";
@@ -388,7 +390,7 @@ const FLOATERS: { flavor: string; pos: [number, number, number]; spin: number }[
   { flavor: "sugarfree", pos: [1.05, -0.58, -2.4], spin: -0.4 },
 ];
 
-function Scene({ scroll, reduced, mobile, low }: { scroll: Scroll; reduced: boolean; mobile: boolean; low: boolean }) {
+function Scene({ scroll, reduced, mobile, fx, lite, light }: { scroll: Scroll; reduced: boolean; mobile: boolean; fx: boolean; lite: boolean; light: boolean }) {
   const smooth = useSmooth(scroll);
   const { scene, camera } = useThree();
   const entered = useStore((s) => s.entered);
@@ -462,7 +464,7 @@ function Scene({ scroll, reduced, mobile, low }: { scroll: Scroll; reduced: bool
 
   return (
     <>
-      <Cloud count={mobile ? 22000 : 60000} smooth={smooth} hero={hero} />
+      <Cloud count={light ? 14000 : mobile || lite ? 26000 : 60000} smooth={smooth} hero={hero} />
       <Shock smooth={smooth} />
       <group ref={hero} visible={false}>
         <Wings state={wingOpen} />
@@ -470,8 +472,8 @@ function Scene({ scroll, reduced, mobile, low }: { scroll: Scroll; reduced: bool
       <pointLight intensity={14} position={[0, -2.2, 2]} color="#ff9a1f" decay={1.3} />
       <directionalLight intensity={3} position={[-2, 3, 4]} color="#fff1dc" />
       <Environment files="/hdr/lobby.hdr" environmentIntensity={0.85} />
-      <TrueColourPass follow={hero} fxOn={!mobile && !low} reveal={reveal}>
-        <Fizz count={mobile ? 350 : 1400} smooth={smooth} entered={enter} />
+      <TrueColourPass follow={hero} fxOn={!mobile && fx} reveal={reveal}>
+        <Fizz count={light ? 300 : mobile || lite ? 650 : 1400} smooth={smooth} entered={enter} />
         <group ref={floaters}>
           {FLOATERS.map((f) => (
             <group key={f.flavor}>
@@ -480,7 +482,7 @@ function Scene({ scroll, reduced, mobile, low }: { scroll: Scroll; reduced: bool
           ))}
         </group>
       </TrueColourPass>
-      <Fx smooth={smooth} mobile={mobile || low} bloom={1} threshold={0.92} />
+      <Fx smooth={smooth} mobile={mobile || !fx} bloom={1} threshold={0.92} />
     </>
   );
 }
@@ -488,18 +490,21 @@ function Scene({ scroll, reduced, mobile, low }: { scroll: Scroll; reduced: bool
 export default function Stage({ scroll, active, reduced }: { scroll: Scroll; active: boolean; reduced: boolean }) {
   const isDesktop = useMediaQuery("(min-width: 768px)", true);
   const entered = useStore((s) => s.entered);
-  const [low, setLow] = useState(false); // Slow GPU: drop post-processing and pixel ratio rather than stutter.
+  const q = useQuality();
+  const wiping = useStore((st) => st.wiping);
+  const downgrade = useQualityStore((s) => s.downgrade);
   return (
     <Canvas
-      frameloop={active ? "always" : "never"}
-      dpr={low ? 1 : [1, isDesktop ? 1.5 : 1.25]}
+      frameloop={wiping ? "never" : active ? "always" : "never"}
+      dpr={q.dpr}
       camera={{ fov: 32, position: [0, 0, 5], near: 0.1, far: 120 }}
       gl={{ antialias: false, powerPreference: "high-performance" }}
     >
       {/* Starts after the preloader, so first-load work is not mistaken for a slow GPU. */}
-      {entered && <PerformanceMonitor onDecline={() => setLow(true)} />}
+      {entered && <PerformanceMonitor onDecline={downgrade} />}
       <Suspense fallback={null}>
-        <Scene scroll={scroll} reduced={reduced} mobile={!isDesktop} low={low} />
+        <Scene scroll={scroll} reduced={reduced} mobile={!isDesktop} fx={q.fx} lite={q.lite} light={q.light} />
+        <WarmSignal />
       </Suspense>
     </Canvas>
   );
