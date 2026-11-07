@@ -7,12 +7,11 @@ import { Canvas } from "@react-three/fiber";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { View } from "@react-three/drei";
 
 import { CANS, WARNING, World } from "@/data/cans";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { WorldProps } from "./worlds/shared";
-import ExplodedCan from "./ExplodedCan";
+import Formula from "./Formula";
 import Reveal from "@/components/Reveal";
 import { Company } from "@/slices/Landing";
 
@@ -35,7 +34,6 @@ export default function Product({ slug }: { slug: string }) {
   const root = useRef<HTMLDivElement>(null);
   const hudValue = useRef<HTMLSpanElement>(null);
   const worldScroll = useRef({ progress: 0, velocity: 0 });
-  const formulaScroll = useRef({ progress: 0, velocity: 0 });
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)", false);
   const isDesktop = useMediaQuery("(min-width: 768px)", true);
   const [worldOn, setWorldOn] = useState(true);
@@ -67,19 +65,7 @@ export default function Product({ slug }: { slug: string }) {
         if (i < 2) tl.to(el, { opacity: 0, y: -50, duration: 0.07 }, 0.38 + i * 0.26);
       });
 
-      const facts = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".formula",
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 0.6,
-          onUpdate: (self) => {
-            formulaScroll.current.progress = self.progress;
-          },
-        },
-      });
       gsap.fromTo(".packshot", { yPercent: 14, rotate: -5 }, { yPercent: -10, rotate: 5, ease: "none", scrollTrigger: { trigger: ".spec", start: "top bottom", end: "bottom top", scrub: true } });
-      facts.from(".fact", { opacity: 0, x: -30, stagger: 0.09, duration: 0.1 }, 0.14).to({}, { duration: 0.3 });
     },
     { scope: root, dependencies: [slug, reduced], revertOnUpdate: true },
   );
@@ -136,26 +122,7 @@ export default function Product({ slug }: { slug: string }) {
         </div>
       </section>
 
-      {/* The formula: can splits open, real numbers come out */}
-      <section className="formula relative h-[320vh]" style={{ backgroundColor: can.color }}>
-        <div className="sticky top-0 h-screen overflow-hidden">
-          <View className="absolute inset-0">
-            <ExplodedCan can={can} scroll={formulaScroll} />
-          </View>
-        </div>
-        <div className="pointer-events-none sticky top-0 z-[40] -mt-[100vh] flex h-screen flex-col justify-between p-4 pt-24 md:p-10 md:pt-28">
-            <Reveal text="The formula that gives you wiiings" className="max-w-xl text-4xl font-black uppercase leading-none md:text-7xl" />
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 md:w-[30vw] md:grid-cols-1">
-              {can.facts.map((f) => (
-                <div key={f.name} className="fact border-b border-white/25 pb-1 md:flex md:items-baseline md:justify-between">
-                  <dt className="text-sm uppercase tracking-widest opacity-90">{f.name}</dt>
-                  <dd className="text-xl font-black md:text-3xl">{f.value}</dd>
-                </div>
-              ))}
-              <p className="fact col-span-2 pt-1 text-xs font-normal opacity-90 md:col-span-1">Values per 250 ml</p>
-            </dl>
-        </div>
-      </section>
+      <Formula can={can} />
 
       {/* Product: the real can, the facts, where to buy */}
       <section className="spec relative z-[40] overflow-hidden bg-paper px-4 py-20 text-carbon md:px-10 md:py-32">
