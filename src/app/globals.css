@@ -1,3 +1,81 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Kinetic Precision tokens. Full spec: BRAND.md */
+:root {
+  --hairline: rgba(255, 255, 255, 0.12);
+  --ballistic: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: clip; }
+
+@layer components {
+  /* Display: stacked brick. */
+  .display {
+    @apply font-black uppercase;
+    /* !important: Tailwind text-* size utilities also set line-height and would otherwise break the stack. */
+    line-height: 0.92 !important;
+    letter-spacing: -0.015em;
+  }
+  /* Telemetry micro-copy. */
+  .micro {
+    @apply font-mono uppercase;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+  }
+  .chamfer {
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  }
+  /* CTA: crimson with a hard diagonal wipe on hover, never a fade. */
+  .btn-signal {
+    @apply relative items-center gap-3 overflow-hidden bg-crimson px-7 py-3.5 font-mono text-xs font-bold uppercase text-white;
+    letter-spacing: 0.14em;
+    isolation: isolate;
+  }
+  .btn-signal::before {
+    content: "";
+    position: absolute;
+    inset: -2px -30%;
+    z-index: -1;
+    background: #fff;
+    transform: translateX(-112%) skewX(-24deg);
+    transition: transform 0.38s var(--ballistic);
+  }
+  .btn-signal:hover { color: #0b0e14; }
+  .btn-signal:hover::before { transform: translateX(0) skewX(-24deg); }
+  .btn-signal > span { transition: transform 0.38s var(--ballistic); }
+  .btn-signal:hover > span { transform: translateX(6px); }
+  /* Same behaviour, outlined, for secondary actions. */
+  .btn-line {
+    @apply relative inline-block overflow-hidden border border-current px-5 py-2 font-mono text-xs font-bold uppercase;
+    letter-spacing: 0.14em;
+    isolation: isolate;
+  }
+  .btn-line::before {
+    content: "";
+    position: absolute;
+    inset: -2px -30%;
+    z-index: -1;
+    background: #ffd100;
+    transform: translateX(-112%) skewX(-24deg);
+    transition: transform 0.32s var(--ballistic);
+  }
+  .btn-line:hover { color: #0b0e14; border-color: #ffd100; }
+  .btn-line:hover::before { transform: translateX(0) skewX(-24deg); }
+  /* Carbon-fibre weave. */
+  .carbon {
+    background-color: #0b0e14;
+    background-image:
+      linear-gradient(45deg, rgba(255, 255, 255, 0.022) 25%, transparent 25% 75%, rgba(255, 255, 255, 0.022) 75%),
+      linear-gradient(45deg, rgba(255, 255, 255, 0.022) 25%, transparent 25% 75%, rgba(255, 255, 255, 0.022) 75%);
+    background-position: 0 0, 3px 3px;
+    background-size: 6px 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-signal::before, .btn-line::before, .btn-signal > span { transition: none; }
+}

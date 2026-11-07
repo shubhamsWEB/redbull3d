@@ -3,11 +3,6 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, View ,Float, Environment} from "@react-three/drei";
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
-const Loader = dynamic(
-  () => import("@react-three/drei").then((mod) => mod.Loader),
-  { ssr: false },
-);
 
 type Props = {};
 
@@ -36,7 +31,6 @@ export default function ViewCanvas({}: Props) {
           <View.Port />
         </Suspense>
       </Canvas>
-      <Loader />
     </>
   );
 }

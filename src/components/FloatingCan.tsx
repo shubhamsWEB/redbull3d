@@ -7,23 +7,25 @@ import { SodaCan } from "@/components/SodaCan";
 import { Group } from "three";
 
 type FloatingCanProps = {
-  flavor?: any;
+  flavor?: string;
   floatSpeed?: number;
   rotationIntensity?: number;
   floatIntensity?: number;
   floatingRange?: [number, number];
   children?: ReactNode;
+  trueColor?: boolean;
 };
 
 const FloatingCan = forwardRef<Group, FloatingCanProps>(
   (
     {
-      flavor = "blackCherry",
+      flavor = "energy-drink",
       floatSpeed = 1.5,
       rotationIntensity = 1,
       floatIntensity = 1,
       floatingRange = [-0.1, 0.1],
       children,
+      trueColor,
       ...props
     },
     ref,
@@ -37,7 +39,7 @@ const FloatingCan = forwardRef<Group, FloatingCanProps>(
           floatingRange={floatingRange}
         >
           {children}
-          <SodaCan flavor={flavor} />
+          <SodaCan flavor={flavor} trueColor={trueColor} />
         </Float>
       </group>
     );

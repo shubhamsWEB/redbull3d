@@ -1,11 +1,15 @@
 import { create } from "zustand";
 
 interface State {
-  ready: boolean;
-  isReady: () => void;
+  entered: boolean;
+  enter: () => void;
+  worldsReady: boolean;
+  setWorldsReady: () => void;
 }
 
 export const useStore = create<State>((set) => ({
-  ready: false,
-  isReady: () => set({ ready: true }),
+  entered: false,
+  enter: () => set({ entered: true }),
+  worldsReady: false,
+  setWorldsReady: () => set({ worldsReady: true }),
 }));

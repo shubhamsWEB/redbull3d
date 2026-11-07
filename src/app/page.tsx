@@ -1,16 +1,14 @@
-import Image from "next/image";
-import Hero from '../slices/Hero';
-import SkyDive from "@/slices/SkyDive";
-import Carousel from "@/slices/Carousel";
-import Text from "@/slices/AlternatingText";
+import TheCan from "@/slices/TheCan";
+import FiveWorlds from "@/slices/FiveWorlds";
+import Landing, { Ticker } from "@/slices/Landing";
+
 export default function Home() {
   return (
     <>
-  
-    <Hero/>
-    <SkyDive />
-    <Carousel/>
-    <Text/>
+      <TheCan />
+      <FiveWorlds />
+      <Ticker />
+      <Landing />
     </>
   );
 }
